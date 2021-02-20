@@ -13,6 +13,12 @@ func init() {
 	Instance = &implementation.GitGeneratorImpl{}
 }
 
+func ThreadsafeInstance() api.GitApi {
+	return &implementation.GitGeneratorImpl{}
+}
+
+// this is not thread safe - only use for tests or cmd line client
+
 func CreateTemporaryWorkdir(ctx context.Context, basePath string) error {
 	return Instance.CreateTemporaryWorkdir(ctx, basePath)
 }
