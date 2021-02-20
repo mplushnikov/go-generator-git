@@ -33,6 +33,10 @@ func Generate(ctx context.Context) (*genlibapi.Response, error) {
 	return Instance.Generate(ctx)
 }
 
+func CommitAndPush(ctx context.Context, name string, email string, message string) error {
+	return Instance.CommitAndPush(ctx, name, email, message)
+}
+
 func Cleanup(ctx context.Context) error {
 	return Instance.Cleanup(ctx)
 }

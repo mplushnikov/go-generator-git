@@ -49,7 +49,7 @@ type GitApi interface {
 	// that were rendered.
 	Generate(ctx context.Context) (*genlibapi.Response, error)
 
-	// commit the changes in the target and push them
+	// commit the changes in the target and push them (TODO)
 	CommitAndPush(ctx context.Context, name string, email string, message string) error
 
 	// delete the temporary working directory, including the source and target clones underneath it

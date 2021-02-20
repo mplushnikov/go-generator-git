@@ -164,8 +164,14 @@ func (g *GitGeneratorImpl) CommitAndPush(ctx context.Context, name string, email
 		return errCloneTargetSuccessfullyFirst(ctx)
 	}
 
-	// TODO
-	panic("implement me")
+	aulogging.Logger.Ctx(ctx).Info().Printf("committing and pushing")
+	err := g.target.CommitAndPush(ctx, name, email, message)
+	if err != nil {
+		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Print("error during commit or push")
+		return err
+	}
+
+	return nil
 }
 
 func (g *GitGeneratorImpl) Cleanup(ctx context.Context) error {
@@ -174,7 +180,7 @@ func (g *GitGeneratorImpl) Cleanup(ctx context.Context) error {
 		return nil
 	}
 	aulogging.Logger.Ctx(ctx).Debug().Printf("cleaning up temporary working directory %s", g.workdir.Path(ctx))
-	return g.Cleanup(ctx)
+	return g.workdir.DeleteRecursive(ctx)
 }
 
 // internals
