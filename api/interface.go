@@ -49,6 +49,9 @@ type GitApi interface {
 	// that were rendered.
 	Generate(ctx context.Context) (*genlibapi.Response, error)
 
+	// commit the changes in the target and push them
+	CommitAndPush(ctx context.Context, name string, email string, message string) error
+
 	// delete the temporary working directory, including the source and target clones underneath it
 	//
 	// the base path given to CreateTemporaryWorkdir is left untouched so it can be re-used for the next
