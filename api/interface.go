@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 )
 
 // Functionality that this library exposes.
@@ -49,8 +50,8 @@ type GitApi interface {
 	// that were rendered.
 	Generate(ctx context.Context) (*genlibapi.Response, error)
 
-	// commit the changes in the target and push them (TODO)
-	CommitAndPush(ctx context.Context, name string, email string, message string) error
+	// commit the changes in the target and push them (if an auth method is supplied)
+	CommitAndPush(ctx context.Context, name string, email string, message string, auth transport.AuthMethod) error
 
 	// delete the temporary working directory, including the source and target clones underneath it
 	//

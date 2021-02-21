@@ -10,6 +10,7 @@ import (
 	"github.com/StephanHCB/go-generator-git/internal/repository/tmpdir"
 	generatorlib "github.com/StephanHCB/go-generator-lib"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 )
 
 type GitGeneratorImpl struct {
@@ -153,7 +154,7 @@ func (g *GitGeneratorImpl) Generate(ctx context.Context) (*genlibapi.Response, e
 	return response, nil
 }
 
-func (g *GitGeneratorImpl) CommitAndPush(ctx context.Context, name string, email string, message string) error {
+func (g *GitGeneratorImpl) CommitAndPush(ctx context.Context, name string, email string, message string, auth transport.AuthMethod) error {
 	if g.workdir == nil {
 		return errCreateWorkdirFirst(ctx)
 	}
@@ -164,8 +165,13 @@ func (g *GitGeneratorImpl) CommitAndPush(ctx context.Context, name string, email
 		return errCloneTargetSuccessfullyFirst(ctx)
 	}
 
-	aulogging.Logger.Ctx(ctx).Info().Printf("committing and pushing")
-	err := g.target.CommitAndPush(ctx, name, email, message)
+	if auth != nil {
+		g.target.EnablePush()
+		aulogging.Logger.Ctx(ctx).Info().Printf("committing and pushing")
+	} else {
+		aulogging.Logger.Ctx(ctx).Info().Printf("committing (but not pushing - no auth supplied)")
+	}
+	err := g.target.CommitAndPush(ctx, name, email, message, auth)
 	if err != nil {
 		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Print("error during commit or push")
 		return err

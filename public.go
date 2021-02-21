@@ -5,6 +5,7 @@ import (
 	"github.com/StephanHCB/go-generator-git/api"
 	"github.com/StephanHCB/go-generator-git/internal/implementation"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 )
 
 var Instance api.GitApi
@@ -39,8 +40,8 @@ func Generate(ctx context.Context) (*genlibapi.Response, error) {
 	return Instance.Generate(ctx)
 }
 
-func CommitAndPush(ctx context.Context, name string, email string, message string) error {
-	return Instance.CommitAndPush(ctx, name, email, message)
+func CommitAndPush(ctx context.Context, name string, email string, message string, auth transport.AuthMethod) error {
+	return Instance.CommitAndPush(ctx, name, email, message, auth)
 }
 
 func Cleanup(ctx context.Context) error {

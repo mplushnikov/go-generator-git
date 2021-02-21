@@ -4,8 +4,6 @@ import (
 	"context"
 	generatorgit "github.com/StephanHCB/go-generator-git"
 	"github.com/StephanHCB/go-generator-git/docs"
-	"github.com/StephanHCB/go-generator-git/internal/repository/gittargetrepo"
-	"github.com/go-git/go-git/v5"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -50,10 +48,7 @@ func TestHappyPath_End2End_NewTargetBranch(t *testing.T) {
 	// TODO check genspec, renderspec, and one other small file
 
 	docs.Then("commit and (simulated) push succeed")
-	gittargetrepo.PushFunc = func(repo *git.Repository) error {
-		return nil
-	}
-	err = generatorgit.CommitAndPush(ctx, "somebody", "somebody@mailinator.com", "initial generation")
+	err = generatorgit.CommitAndPush(ctx, "somebody", "somebody@mailinator.com", "initial generation", nil)
 	require.Nil(t, err)
 	// TODO check that no open changes in target repo any more
 	// TODO check that new commit was made

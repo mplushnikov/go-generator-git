@@ -5,22 +5,25 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"time"
 )
 
 type GitTargetRepo struct{
 	localPath string
 	repo      *git.Repository
+	pushFunc  func(auth transport.AuthMethod) error
 }
 
-var PushFunc = func(repo *git.Repository) error {
-	// TODO need auth in PushOptions (secret for operator?)
-	// return repo.Push(&git.PushOptions{})
-	return nil
-}
+// note: push is disabled by default until we enable it
 
 func Instance(_ context.Context, localPath string) *GitTargetRepo {
-	return &GitTargetRepo{localPath: localPath}
+	return &GitTargetRepo{
+		localPath: localPath,
+		pushFunc: func(_ transport.AuthMethod) error {
+			return nil
+		},
+	}
 }
 
 func (t *GitTargetRepo) Clone(ctx context.Context, gitRepoUrl string) error {
@@ -61,7 +64,7 @@ func (t *GitTargetRepo) CreateBranch(ctx context.Context, shortBranchName string
 	return t.repo.Storer.SetReference(ref)
 }
 
-func (t *GitTargetRepo) CommitAndPush(ctx context.Context, name string, email string, message string) error {
+func (t *GitTargetRepo) CommitAndPush(ctx context.Context, name string, email string, message string, auth transport.AuthMethod) error {
 	worktree, err := t.repo.Worktree()
 	if err != nil {
 		return err
@@ -83,12 +86,20 @@ func (t *GitTargetRepo) CommitAndPush(ctx context.Context, name string, email st
 		return err
 	}
 
-	err = PushFunc(t.repo)
+	err = t.pushFunc(auth)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (t *GitTargetRepo) EnablePush() {
+	t.pushFunc = func(auth transport.AuthMethod) error {
+		return t.repo.Push(&git.PushOptions{
+			Auth: auth,
+		})
+	}
 }
 
 func (t *GitTargetRepo) Path() string {
