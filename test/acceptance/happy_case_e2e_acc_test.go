@@ -17,7 +17,7 @@ func TestHappyPath_End2End_NewTargetBranch(t *testing.T) {
 	targetFrom := "main"
 	generatorName := "main"
 	renderSpecFile := "generated-main.yaml"
-	parameters := map[string]string{} // all parameters have defaults for this generator
+	parameters := map[string]interface{}{} // all parameters have defaults for this generator
 
 	ctx := context.TODO()
 

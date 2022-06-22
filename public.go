@@ -32,7 +32,7 @@ func CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, b
 	return Instance.CloneTargetRepo(ctx, gitRepoUrl, gitBranch, baseBranch)
 }
 
-func WriteRenderSpecFile(ctx context.Context, generatorName string, renderSpecFile string, parameters map[string]string) (*genlibapi.Response, error) {
+func WriteRenderSpecFile(ctx context.Context, generatorName string, renderSpecFile string, parameters map[string]interface{}) (*genlibapi.Response, error) {
 	return Instance.WriteRenderSpecFile(ctx, generatorName, renderSpecFile, parameters)
 }
 

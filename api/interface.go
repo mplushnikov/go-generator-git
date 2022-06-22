@@ -41,7 +41,7 @@ type GitApi interface {
 	WriteRenderSpecFile(ctx context.Context,
 		generatorName string,
 		renderSpecFile string,
-		parameters map[string]string) (*genlibapi.Response, error)
+		parameters map[string]interface{}) (*genlibapi.Response, error)
 
 	// generate files using the render spec file written by WriteRenderSpecFile
 	//

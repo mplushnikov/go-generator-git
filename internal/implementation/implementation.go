@@ -106,7 +106,7 @@ func (g *GitGeneratorImpl) CloneTargetRepo(ctx context.Context, gitRepoUrl strin
 	}
 }
 
-func (g *GitGeneratorImpl) WriteRenderSpecFile(ctx context.Context, generatorName string, renderSpecFile string, parameters map[string]string) (*genlibapi.Response, error) {
+func (g *GitGeneratorImpl) WriteRenderSpecFile(ctx context.Context, generatorName string, renderSpecFile string, parameters map[string]interface{}) (*genlibapi.Response, error) {
 	if g.workdir == nil {
 		return &genlibapi.Response{Success: false}, errCreateWorkdirFirst(ctx)
 	}
@@ -193,8 +193,8 @@ func (g *GitGeneratorImpl) Cleanup(ctx context.Context) error {
 
 func (g *GitGeneratorImpl) request() *genlibapi.Request {
 	return &genlibapi.Request{
-		SourceBaseDir: g.source.Path(),
-		TargetBaseDir: g.target.Path(),
+		SourceBaseDir:  g.source.Path(),
+		TargetBaseDir:  g.target.Path(),
 		RenderSpecFile: g.renderSpecFile,
 	}
 }
@@ -206,7 +206,7 @@ func errCreateWorkdirFirst(ctx context.Context) error {
 }
 
 func errDuplicateClone(ctx context.Context, whichRepo string) error {
-	return errMsg(ctx, "implementation error - duplicate clone for " + whichRepo)
+	return errMsg(ctx, "implementation error - duplicate clone for "+whichRepo)
 }
 
 func errCloneSourceFirst(ctx context.Context) error {
@@ -229,4 +229,3 @@ func errMsg(ctx context.Context, message string) error {
 	aulogging.Logger.Ctx(ctx).Error().Print(message)
 	return errors.New(message)
 }
-
