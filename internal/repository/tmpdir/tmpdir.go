@@ -30,7 +30,7 @@ func (t *TmpDir) DeleteRecursive(_ context.Context) error {
 }
 
 func (t *TmpDir) Path(_ context.Context) string {
-	return t.basePath + "/" + t.dirName
+	return filepath.Join(t.basePath, t.dirName)
 }
 
 // internal helpers

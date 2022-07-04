@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	aulogging "github.com/StephanHCB/go-autumn-logging"
-	"github.com/StephanHCB/go-generator-git/internal/repository/gitsourcerepo"
-	"github.com/StephanHCB/go-generator-git/internal/repository/gittargetrepo"
-	"github.com/StephanHCB/go-generator-git/internal/repository/tmpdir"
+	"github.com/StephanHCB/go-generator-git/v2/api"
+	"github.com/StephanHCB/go-generator-git/v2/internal/repository/gitsourcerepo"
+	"github.com/StephanHCB/go-generator-git/v2/internal/repository/gittargetrepo"
+	"github.com/StephanHCB/go-generator-git/v2/internal/repository/tmpdir"
 	generatorlib "github.com/StephanHCB/go-generator-lib"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
 	"github.com/go-git/go-git/v5/plumbing/transport"
+	"path/filepath"
 )
 
 type GitGeneratorImpl struct {
@@ -21,54 +23,85 @@ type GitGeneratorImpl struct {
 	renderSpecFile string
 }
 
+type GitApiRepoImpl struct {
+	localPath string
+}
+
+func (this *GitApiRepoImpl) GetLocalPath() string {
+	return this.localPath
+}
+
 func (g *GitGeneratorImpl) CreateTemporaryWorkdir(ctx context.Context, basePath string) error {
 	g.workdir = tmpdir.Instance(ctx, basePath)
 	aulogging.Logger.Ctx(ctx).Debug().Printf("creating temporary working directory %s", g.workdir.Path(ctx))
 	return g.workdir.Create(ctx)
 }
 
-func (g *GitGeneratorImpl) CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string) error {
+func (g *GitGeneratorImpl) CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (api.GitApiRepo, error) {
 	if g.workdir == nil {
-		return errCreateWorkdirFirst(ctx)
+		return nil, errCreateWorkdirFirst(ctx)
 	}
 	if g.source != nil {
-		return errDuplicateClone(ctx, "source")
+		return nil, errDuplicateClone(ctx, "source")
 	}
-	path := g.workdir.Path(ctx) + "/source"
+	path := filepath.Join(g.workdir.Path(ctx), "source")
 	aulogging.Logger.Ctx(ctx).Info().Printf("cloning source repo to %s", path)
 	g.source = gitsourcerepo.Instance(ctx, path)
-	if err := g.source.Clone(ctx, gitRepoUrl, gitBranch); err != nil {
+	if err := g.source.Clone(ctx, gitRepoUrl, gitBranch, auth); err != nil {
 		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error cloning source repo from %s on branch %s", gitRepoUrl, gitBranch)
-		return err
+		return &GitApiRepoImpl{path}, err
 	}
-	return nil
+	return &GitApiRepoImpl{path}, nil
 }
 
-func (g *GitGeneratorImpl) CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string) error {
+func (g *GitGeneratorImpl) PrepareTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (api.GitApiRepo, error) {
 	if g.workdir == nil {
-		return errCreateWorkdirFirst(ctx)
+		return nil, errCreateWorkdirFirst(ctx)
 	}
 	if g.target != nil {
-		return errDuplicateClone(ctx, "target")
+		return nil, errDuplicateClone(ctx, "target")
 	}
 
-	path := g.workdir.Path(ctx) + "/target"
+	path := filepath.Join(g.workdir.Path(ctx), "target")
+
+	g.target = gittargetrepo.Instance(ctx, path)
+	err := g.target.PrepareInit(ctx, gitRepoUrl, gitBranch)
+	if err != nil {
+		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error preparing target repo from %s", gitRepoUrl)
+		return &GitApiRepoImpl{path}, err
+	}
+	g.targetBranch = gitBranch
+
+	return &GitApiRepoImpl{path}, nil
+}
+
+func (g *GitGeneratorImpl) CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string, auth transport.AuthMethod) (api.GitApiRepo, error) {
+	if g.workdir == nil {
+		return nil, errCreateWorkdirFirst(ctx)
+	}
+	if g.target != nil {
+		return nil, errDuplicateClone(ctx, "target")
+	}
+
+	path := filepath.Join(g.workdir.Path(ctx), "target")
+	localApiRepo := &GitApiRepoImpl{path}
+
 	aulogging.Logger.Ctx(ctx).Info().Printf("cloning target repo to %s", path)
 	g.target = gittargetrepo.Instance(ctx, path)
-	if err := g.target.Clone(ctx, gitRepoUrl); err != nil {
+	if err := g.target.Clone(ctx, gitRepoUrl, auth); err != nil {
 		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error cloning target repo from %s", gitRepoUrl)
-		return err
+		return localApiRepo, err
 	}
 
 	if hash := g.target.GetHashForRevision(ctx, gitBranch); hash != nil {
 		aulogging.Logger.Ctx(ctx).Info().Printf("checking out %s (currently at %s)", gitBranch, hash.String())
 		if err := g.target.Checkout(ctx, gitBranch); err != nil {
 			aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error checking out %s", gitBranch)
-			return err
+			return localApiRepo, err
 		} else {
 			// ok. remember it for CommitAndPush()
 			g.targetBranch = gitBranch
-			return nil
+			return localApiRepo, nil
 		}
 	} else {
 		if baseHash := g.target.GetHashForRevision(ctx, baseBranch); baseHash != nil {
@@ -78,7 +111,7 @@ func (g *GitGeneratorImpl) CloneTargetRepo(ctx context.Context, gitRepoUrl strin
 			aulogging.Logger.Ctx(ctx).Info().Printf("creating new branch %s from %s", gitBranch, baseHash.String())
 			if err := g.target.CreateBranch(ctx, gitBranch, baseHash); err != nil {
 				aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error creating branch %s from %s", gitBranch, baseHash.String())
-				return err
+				return localApiRepo, err
 			}
 
 			// now the branch exists, verify and check it out
@@ -86,22 +119,22 @@ func (g *GitGeneratorImpl) CloneTargetRepo(ctx context.Context, gitRepoUrl strin
 			if hash == nil {
 				message := "internal error - lookup of branch failed right after create"
 				aulogging.Logger.Ctx(ctx).Error().Print(message)
-				return errors.New(message)
+				return localApiRepo, errors.New(message)
 			}
 
 			aulogging.Logger.Ctx(ctx).Info().Printf("now checking out %s (currently at %s)", gitBranch, hash.String())
 			if err := g.target.Checkout(ctx, gitBranch); err != nil {
 				aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error checking out %s", gitBranch)
-				return err
+				return localApiRepo, err
 			}
 
 			// ok. remember it for CommitAndPush()
 			g.targetBranch = gitBranch
-			return nil
+			return localApiRepo, nil
 		} else {
 			message := fmt.Sprintf("base branch %s does not exist", baseBranch)
 			aulogging.Logger.Ctx(ctx).Error().Print(message)
-			return errors.New(message)
+			return localApiRepo, errors.New(message)
 		}
 	}
 }

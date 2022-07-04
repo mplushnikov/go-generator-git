@@ -2,8 +2,8 @@ package acceptance
 
 import (
 	"context"
-	generatorgit "github.com/StephanHCB/go-generator-git"
-	"github.com/StephanHCB/go-generator-git/docs"
+	generatorgit "github.com/StephanHCB/go-generator-git/v2"
+	"github.com/StephanHCB/go-generator-git/v2/docs"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -26,10 +26,12 @@ func TestHappyPath_End2End_NewTargetBranch(t *testing.T) {
 	err := generatorgit.CreateTemporaryWorkdir(ctx, "../output")
 	require.Nil(t, err)
 
-	err = generatorgit.CloneSourceRepo(ctx, sourceUrl, sourceBranch)
+	path, err := generatorgit.CloneSourceRepo(ctx, sourceUrl, sourceBranch, nil)
+	require.NotNil(t, path)
 	require.Nil(t, err)
 
-	err = generatorgit.CloneTargetRepo(ctx, targetUrl, targetBranch, targetFrom)
+	path, err = generatorgit.CloneTargetRepo(ctx, targetUrl, targetBranch, targetFrom, nil)
+	require.NotNil(t, path)
 	require.Nil(t, err)
 
 	response, err := generatorgit.WriteRenderSpecFile(ctx, generatorName, renderSpecFile, parameters)

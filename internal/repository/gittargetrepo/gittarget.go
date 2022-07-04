@@ -3,15 +3,17 @@ package gittargetrepo
 import (
 	"context"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"time"
 )
 
-type GitTargetRepo struct{
+type GitTargetRepo struct {
 	localPath string
 	repo      *git.Repository
+	remote    *git.Remote
 	pushFunc  func(auth transport.AuthMethod) error
 }
 
@@ -26,10 +28,31 @@ func Instance(_ context.Context, localPath string) *GitTargetRepo {
 	}
 }
 
-func (t *GitTargetRepo) Clone(ctx context.Context, gitRepoUrl string) error {
+func (t *GitTargetRepo) PrepareInit(ctx context.Context, gitRepoUrl string, gitBranch string) error {
+	repo, err := git.PlainInit(t.localPath, false)
+	t.repo = repo
+
+	if gitBranch != "master" {
+		h := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.NewBranchReferenceName(gitBranch))
+		if err = t.repo.Storer.SetReference(h); err != nil {
+			return err
+		}
+	}
+
+	remote, err := repo.CreateRemote(&config.RemoteConfig{
+		Name: git.DefaultRemoteName,
+		URLs: []string{gitRepoUrl},
+	})
+	t.remote = remote
+
+	return err
+}
+
+func (t *GitTargetRepo) Clone(ctx context.Context, gitRepoUrl string, auth transport.AuthMethod) error {
 	repo, err := git.PlainCloneContext(ctx, t.localPath, false, &git.CloneOptions{
-		URL:           gitRepoUrl,
-		Progress:      nil,
+		Auth:     auth,
+		URL:      gitRepoUrl,
+		Progress: nil,
 	})
 	t.repo = repo
 	return err
