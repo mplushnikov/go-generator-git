@@ -3,13 +3,14 @@ package gittargetrepo
 import (
 	"context"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"time"
 )
 
-type GitTargetRepo struct{
+type GitTargetRepo struct {
 	localPath string
 	repo      *git.Repository
 	pushFunc  func(auth transport.AuthMethod) error
@@ -26,10 +27,23 @@ func Instance(_ context.Context, localPath string) *GitTargetRepo {
 	}
 }
 
-func (t *GitTargetRepo) Clone(ctx context.Context, gitRepoUrl string) error {
+func (t *GitTargetRepo) PrepareInit(ctx context.Context, gitRepoUrl string) error {
+	repo, err := git.PlainInit(t.localPath, false)
+	t.repo = repo
+
+	_, err = repo.CreateRemote(&config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{gitRepoUrl},
+	})
+
+	return err
+}
+
+func (t *GitTargetRepo) Clone(ctx context.Context, gitRepoUrl string, auth transport.AuthMethod) error {
 	repo, err := git.PlainCloneContext(ctx, t.localPath, false, &git.CloneOptions{
-		URL:           gitRepoUrl,
-		Progress:      nil,
+		Auth:     auth,
+		URL:      gitRepoUrl,
+		Progress: nil,
 	})
 	t.repo = repo
 	return err
@@ -97,7 +111,8 @@ func (t *GitTargetRepo) CommitAndPush(ctx context.Context, name string, email st
 func (t *GitTargetRepo) EnablePush() {
 	t.pushFunc = func(auth transport.AuthMethod) error {
 		return t.repo.Push(&git.PushOptions{
-			Auth: auth,
+			RemoteName: "origin",
+			Auth:       auth,
 		})
 	}
 }

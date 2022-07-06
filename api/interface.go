@@ -16,13 +16,16 @@ type GitApi interface {
 	CreateTemporaryWorkdir(ctx context.Context, basePath string) error
 
 	// clone the source repo into the working directory and switch to the given branch (or tag, or revision)
-	CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string) (string, error)
+	CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (string, error)
 
 	// clone the target repo into the working directory and set up the given branch
 	//
 	// if the branch does not yet exist, it will be created from the base branch (or tag, or revision),
 	// otherwise we just check it out.
-	CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string) (string, error)
+	CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string, auth transport.AuthMethod) (string, error)
+
+	// prepare the target repo into the working directory
+	PrepareTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (string, error)
 
 	// write the given parameters for the given generator to a render spec file in the target directory
 	//

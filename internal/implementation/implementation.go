@@ -11,6 +11,7 @@ import (
 	generatorlib "github.com/StephanHCB/go-generator-lib"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
 	"github.com/go-git/go-git/v5/plumbing/transport"
+	"path/filepath"
 )
 
 type GitGeneratorImpl struct {
@@ -27,7 +28,7 @@ func (g *GitGeneratorImpl) CreateTemporaryWorkdir(ctx context.Context, basePath 
 	return g.workdir.Create(ctx)
 }
 
-func (g *GitGeneratorImpl) CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string) (string, error) {
+func (g *GitGeneratorImpl) CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (string, error) {
 	if g.workdir == nil {
 		return "", errCreateWorkdirFirst(ctx)
 	}
@@ -37,14 +38,14 @@ func (g *GitGeneratorImpl) CloneSourceRepo(ctx context.Context, gitRepoUrl strin
 	path := g.workdir.Path(ctx) + "/source"
 	aulogging.Logger.Ctx(ctx).Info().Printf("cloning source repo to %s", path)
 	g.source = gitsourcerepo.Instance(ctx, path)
-	if err := g.source.Clone(ctx, gitRepoUrl, gitBranch); err != nil {
+	if err := g.source.Clone(ctx, gitRepoUrl, gitBranch, auth); err != nil {
 		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error cloning source repo from %s on branch %s", gitRepoUrl, gitBranch)
 		return path, err
 	}
 	return path, nil
 }
 
-func (g *GitGeneratorImpl) CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string) (string, error) {
+func (g *GitGeneratorImpl) PrepareTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (string, error) {
 	if g.workdir == nil {
 		return "", errCreateWorkdirFirst(ctx)
 	}
@@ -52,10 +53,33 @@ func (g *GitGeneratorImpl) CloneTargetRepo(ctx context.Context, gitRepoUrl strin
 		return "", errDuplicateClone(ctx, "target")
 	}
 
-	path := g.workdir.Path(ctx) + "/target"
+	path := filepath.Join(g.workdir.Path(ctx), "target")
+	//os.Mkdir(path, os.ModeDir)
+
+	g.target = gittargetrepo.Instance(ctx, path)
+	err := g.target.PrepareInit(ctx, gitRepoUrl)
+	if err != nil {
+		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error preparing target repo from %s", gitRepoUrl)
+		return path, err
+	}
+	g.targetBranch = gitBranch
+
+	return path, nil
+}
+
+func (g *GitGeneratorImpl) CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string, auth transport.AuthMethod) (string, error) {
+	if g.workdir == nil {
+		return "", errCreateWorkdirFirst(ctx)
+	}
+	if g.target != nil {
+		return "", errDuplicateClone(ctx, "target")
+	}
+
+	path := filepath.Join(g.workdir.Path(ctx), "target")
+
 	aulogging.Logger.Ctx(ctx).Info().Printf("cloning target repo to %s", path)
 	g.target = gittargetrepo.Instance(ctx, path)
-	if err := g.target.Clone(ctx, gitRepoUrl); err != nil {
+	if err := g.target.Clone(ctx, gitRepoUrl, auth); err != nil {
 		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error cloning target repo from %s", gitRepoUrl)
 		return path, err
 	}
