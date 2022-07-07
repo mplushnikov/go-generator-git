@@ -24,12 +24,16 @@ func CreateTemporaryWorkdir(ctx context.Context, basePath string) error {
 	return Instance.CreateTemporaryWorkdir(ctx, basePath)
 }
 
-func CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string) error {
-	return Instance.CloneSourceRepo(ctx, gitRepoUrl, gitBranch)
+func CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (string, error) {
+	return Instance.CloneSourceRepo(ctx, gitRepoUrl, gitBranch, auth)
 }
 
-func CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string) error {
-	return Instance.CloneTargetRepo(ctx, gitRepoUrl, gitBranch, baseBranch)
+func CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string, auth transport.AuthMethod) (string, error) {
+	return Instance.CloneTargetRepo(ctx, gitRepoUrl, gitBranch, baseBranch, auth)
+}
+
+func PrepareTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (string, error) {
+	return Instance.PrepareTargetRepo(ctx, gitRepoUrl, gitBranch, auth)
 }
 
 func WriteRenderSpecFile(ctx context.Context, generatorName string, renderSpecFile string, parameters map[string]interface{}) (*genlibapi.Response, error) {
