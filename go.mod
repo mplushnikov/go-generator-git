@@ -1,4 +1,4 @@
-module github.com/StephanHCB/go-generator-git
+module github.com/mplushnikov/go-generator-git
 
 go 1.14
 
