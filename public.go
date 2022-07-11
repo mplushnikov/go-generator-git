@@ -2,10 +2,10 @@ package generatorgit
 
 import (
 	"context"
-	"github.com/StephanHCB/go-generator-git/api"
-	"github.com/StephanHCB/go-generator-git/internal/implementation"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
 	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/mplushnikov/go-generator-git/api"
+	"github.com/mplushnikov/go-generator-git/internal/implementation"
 )
 
 var Instance api.GitApi
