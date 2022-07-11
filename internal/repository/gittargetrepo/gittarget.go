@@ -13,6 +13,7 @@ import (
 type GitTargetRepo struct {
 	localPath string
 	repo      *git.Repository
+	remote    *git.Remote
 	pushFunc  func(auth transport.AuthMethod) error
 }
 
@@ -27,14 +28,17 @@ func Instance(_ context.Context, localPath string) *GitTargetRepo {
 	}
 }
 
+const REMOTE_NAME = "origin"
+
 func (t *GitTargetRepo) PrepareInit(ctx context.Context, gitRepoUrl string) error {
 	repo, err := git.PlainInit(t.localPath, false)
 	t.repo = repo
 
-	_, err = repo.CreateRemote(&config.RemoteConfig{
-		Name: "origin",
+	remote, err := repo.CreateRemote(&config.RemoteConfig{
+		Name: REMOTE_NAME,
 		URLs: []string{gitRepoUrl},
 	})
+	t.remote = remote
 
 	return err
 }
@@ -110,10 +114,16 @@ func (t *GitTargetRepo) CommitAndPush(ctx context.Context, name string, email st
 
 func (t *GitTargetRepo) EnablePush() {
 	t.pushFunc = func(auth transport.AuthMethod) error {
-		return t.repo.Push(&git.PushOptions{
-			RemoteName: "origin",
-			Auth:       auth,
-		})
+		if nil != t.remote {
+			return t.remote.Push(&git.PushOptions{
+				RemoteName: REMOTE_NAME,
+				Auth:       auth,
+			})
+		} else {
+			return t.repo.Push(&git.PushOptions{
+				Auth: auth,
+			})
+		}
 	}
 }
 
