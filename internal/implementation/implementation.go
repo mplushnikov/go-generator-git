@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	aulogging "github.com/StephanHCB/go-autumn-logging"
-	"github.com/StephanHCB/go-generator-git/internal/repository/gitsourcerepo"
-	"github.com/StephanHCB/go-generator-git/internal/repository/gittargetrepo"
-	"github.com/StephanHCB/go-generator-git/internal/repository/tmpdir"
 	generatorlib "github.com/StephanHCB/go-generator-lib"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
 	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/mplushnikov/go-generator-git/internal/repository/gitsourcerepo"
+	"github.com/mplushnikov/go-generator-git/internal/repository/gittargetrepo"
+	"github.com/mplushnikov/go-generator-git/internal/repository/tmpdir"
 	"path/filepath"
 )
 
