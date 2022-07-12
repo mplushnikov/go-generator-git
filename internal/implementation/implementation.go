@@ -35,7 +35,7 @@ func (g *GitGeneratorImpl) CloneSourceRepo(ctx context.Context, gitRepoUrl strin
 	if g.source != nil {
 		return "", errDuplicateClone(ctx, "source")
 	}
-	path := g.workdir.Path(ctx) + "/source"
+	path := filepath.Join(g.workdir.Path(ctx), "source")
 	aulogging.Logger.Ctx(ctx).Info().Printf("cloning source repo to %s", path)
 	g.source = gitsourcerepo.Instance(ctx, path)
 	if err := g.source.Clone(ctx, gitRepoUrl, gitBranch, auth); err != nil {
@@ -54,10 +54,9 @@ func (g *GitGeneratorImpl) PrepareTargetRepo(ctx context.Context, gitRepoUrl str
 	}
 
 	path := filepath.Join(g.workdir.Path(ctx), "target")
-	//os.Mkdir(path, os.ModeDir)
 
 	g.target = gittargetrepo.Instance(ctx, path)
-	err := g.target.PrepareInit(ctx, gitRepoUrl)
+	err := g.target.PrepareInit(ctx, gitRepoUrl, gitBranch)
 	if err != nil {
 		aulogging.Logger.Ctx(ctx).Warn().WithErr(err).Printf("error preparing target repo from %s", gitRepoUrl)
 		return path, err

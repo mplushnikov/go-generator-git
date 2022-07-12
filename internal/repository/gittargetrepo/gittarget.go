@@ -30,9 +30,16 @@ func Instance(_ context.Context, localPath string) *GitTargetRepo {
 
 const REMOTE_NAME = "origin"
 
-func (t *GitTargetRepo) PrepareInit(ctx context.Context, gitRepoUrl string) error {
+func (t *GitTargetRepo) PrepareInit(ctx context.Context, gitRepoUrl string, gitBranch string) error {
 	repo, err := git.PlainInit(t.localPath, false)
 	t.repo = repo
+
+	if gitBranch != "master" {
+		h := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.NewBranchReferenceName(gitBranch))
+		if err = t.repo.Storer.SetReference(h); err != nil {
+			return err
+		}
+	}
 
 	remote, err := repo.CreateRemote(&config.RemoteConfig{
 		Name: REMOTE_NAME,
