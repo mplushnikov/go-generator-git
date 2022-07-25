@@ -24,15 +24,15 @@ func CreateTemporaryWorkdir(ctx context.Context, basePath string) error {
 	return Instance.CreateTemporaryWorkdir(ctx, basePath)
 }
 
-func CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (string, error) {
+func CloneSourceRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (api.GitApiRepo, error) {
 	return Instance.CloneSourceRepo(ctx, gitRepoUrl, gitBranch, auth)
 }
 
-func CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string, auth transport.AuthMethod) (string, error) {
+func CloneTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, baseBranch string, auth transport.AuthMethod) (api.GitApiRepo, error) {
 	return Instance.CloneTargetRepo(ctx, gitRepoUrl, gitBranch, baseBranch, auth)
 }
 
-func PrepareTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (string, error) {
+func PrepareTargetRepo(ctx context.Context, gitRepoUrl string, gitBranch string, auth transport.AuthMethod) (api.GitApiRepo, error) {
 	return Instance.PrepareTargetRepo(ctx, gitRepoUrl, gitBranch, auth)
 }
 
