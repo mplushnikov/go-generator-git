@@ -1,6 +1,6 @@
-module github.com/mplushnikov/go-generator-git
+module github.com/mplushnikov/go-generator-git/v2
 
-go 1.14
+go 1.17
 
 require (
 	github.com/StephanHCB/go-autumn-logging v0.3.0

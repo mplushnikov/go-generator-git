@@ -8,9 +8,9 @@ import (
 	generatorlib "github.com/StephanHCB/go-generator-lib"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/mplushnikov/go-generator-git/internal/repository/gitsourcerepo"
-	"github.com/mplushnikov/go-generator-git/internal/repository/gittargetrepo"
-	"github.com/mplushnikov/go-generator-git/internal/repository/tmpdir"
+	"github.com/mplushnikov/go-generator-git/v2/internal/repository/gitsourcerepo"
+	"github.com/mplushnikov/go-generator-git/v2/internal/repository/gittargetrepo"
+	"github.com/mplushnikov/go-generator-git/v2/internal/repository/tmpdir"
 	"path/filepath"
 )
 

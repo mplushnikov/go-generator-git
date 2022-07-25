@@ -4,8 +4,8 @@ import (
 	"context"
 	genlibapi "github.com/StephanHCB/go-generator-lib/api"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/mplushnikov/go-generator-git/api"
-	"github.com/mplushnikov/go-generator-git/internal/implementation"
+	"github.com/mplushnikov/go-generator-git/v2/api"
+	"github.com/mplushnikov/go-generator-git/v2/internal/implementation"
 )
 
 var Instance api.GitApi
